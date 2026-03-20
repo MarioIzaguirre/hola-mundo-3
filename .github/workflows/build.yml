@@ -4,15 +4,25 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   sonarqube:
+    name: Build and analyze
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install build wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
+
+      - name: Build with build-wrapper
+        run: |
+          build-wrapper-linux-x86-64 --out-dir bw-output g++ -c main.cpp -o main.o
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -23,3 +33,4 @@ jobs:
             -Dsonar.projectKey=MarioIzaguirre_hola-mundo-3
             -Dsonar.organization=marioizaguirre
             -Dsonar.sources=.
+            -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
